@@ -13,7 +13,7 @@ RSpec.describe "consistent error format" do
       expect(body.dig("error", "details")).to include("user")
     end
 
-    it "returns 422 when a unique index rejects a concurrent insert" do
+    it "returns 422 when a unique index rejects a concurrent user insert" do
       allow_any_instance_of(User).to receive(:save).and_raise(
         ActiveRecord::RecordNotUnique.new("PG::UniqueViolation: index_users_on_username")
       )

@@ -10,7 +10,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :users, only: [ :create ]
       resources :sessions, only: [ :create ]
-      resources :posts, only: %i[index show create update destroy]
+      resources :posts, only: %i[index show create update destroy] do
+        resource :rating, only: :update
+      end
     end
   end
 end

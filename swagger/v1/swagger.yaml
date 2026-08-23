@@ -116,6 +116,52 @@ paths:
       responses:
         '204':
           description: deleted
+  "/api/v1/posts/{post_id}/rating":
+    parameters:
+    - name: post_id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: Authorization
+      in: header
+      schema:
+        type: string
+    put:
+      summary: Creates or updates the current user's rating
+      tags:
+      - Ratings
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: updated
+        '422':
+          description: value out of range
+        '400':
+          description: missing rating key
+        '404':
+          description: soft-deleted post
+        '401':
+          description: unauthenticated
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: object
+                  properties:
+                    value:
+                      type: integer
+                      minimum: 1
+                      maximum: 5
+                  required:
+                  - value
+              required:
+              - rating
   "/api/v1/sessions":
     post:
       summary: Creates a session

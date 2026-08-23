@@ -10,20 +10,33 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_23_083308) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_084801) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "posts", force: :cascade do |t|
+    t.decimal "average_rating", precision: 3, scale: 2
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
+    t.integer "ratings_count", default: 0, null: false
+    t.integer "ratings_sum", default: 0, null: false
     t.string "title", limit: 100, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.integer "views_count", default: 0, null: false
     t.index ["deleted_at"], name: "index_posts_on_deleted_at"
     t.index ["user_id"], name: "index_posts_on_user_id"
+  end
+
+  create_table "ratings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "post_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.integer "value", null: false
+    t.index ["post_id"], name: "index_ratings_on_post_id"
+    t.index ["user_id", "post_id"], name: "index_ratings_on_user_id_and_post_id", unique: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -37,4 +50,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_083308) do
   end
 
   add_foreign_key "posts", "users"
+  add_foreign_key "ratings", "posts"
+  add_foreign_key "ratings", "users"
 end

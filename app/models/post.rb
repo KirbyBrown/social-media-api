@@ -2,6 +2,7 @@
 
 class Post < ApplicationRecord
   belongs_to :user
+  has_many :ratings, dependent: :destroy
 
   TITLE_MAX = 100
   BODY_MAX = 1000
@@ -20,7 +21,7 @@ class Post < ApplicationRecord
   end
 
   def as_api_json
-    as_json(only: %i[id title body views_count created_at updated_at]).merge(
+    as_json(only: %i[id title body views_count ratings_count average_rating created_at updated_at]).merge(
       "user" => user.as_public_json
     )
   end
