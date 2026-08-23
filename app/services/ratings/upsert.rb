@@ -43,9 +43,16 @@ module Ratings
 
       if wrote
         Timeline::Feed.invalidate
-        Ratings::NotifyJob.perform_later(rating.id)
+        enqueue_notification(rating.id)
       end
       rating
+    end
+
+    # Notify is best-effort. The rating already committed; Redis down must not 500. See SOLUTION.md.
+    def enqueue_notification(rating_id)
+      Ratings::NotifyJob.perform_later(rating_id)
+    rescue Redis::BaseError, RedisClient::Error => e
+      Rails.logger.warn("rating notification skipped #{e.class}: #{e.message}")
     end
 
     # update_all skips lock_version and callbacks. increment_counter would not. See SOLUTION.md.

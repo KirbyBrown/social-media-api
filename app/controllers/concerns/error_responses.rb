@@ -34,6 +34,14 @@ module ErrorResponses
         details: unique_constraint_details(error)
       )
     end
+
+    rescue_from Redis::BaseError, RedisClient::Error do
+      render_error(
+        code: "unavailable",
+        message: "A required dependency is unavailable",
+        status: :service_unavailable
+      )
+    end
   end
 
   private

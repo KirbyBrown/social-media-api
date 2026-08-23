@@ -102,4 +102,14 @@ RSpec.describe Ratings::Upsert do
   it "enqueues a notification after a successful write" do
     expect { upsert(rater, 4) }.to have_enqueued_job(Ratings::NotifyJob)
   end
+
+  it "still writes when notification enqueue cannot reach Redis" do
+    allow(Ratings::NotifyJob).to receive(:perform_later)
+      .and_raise(RedisClient::CannotConnectError, "Connection refused")
+
+    rating = upsert(rater, 4)
+
+    expect(rating).to be_persisted
+    expect(post.reload.ratings_count).to eq(1)
+  end
 end

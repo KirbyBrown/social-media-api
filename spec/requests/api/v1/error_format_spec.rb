@@ -28,4 +28,22 @@ RSpec.describe "consistent error format" do
       expect(body.dig("error", "details", "username")).to eq([ "has already been taken" ])
     end
   end
+
+  describe "PUT /api/v1/posts/:post_id/rating" do
+    it "returns 503 in the standard shape when a Redis error escapes the write path" do
+      user = create(:user)
+      record = create(:post)
+      allow_any_instance_of(Locks::RedisLock).to receive(:around)
+        .and_raise(RedisClient::CannotConnectError, "Connection refused")
+
+      put "/api/v1/posts/#{record.id}/rating",
+          params: { rating: { value: 4 } },
+          headers: auth_headers(user),
+          as: :json
+
+      expect(response).to have_http_status(:service_unavailable)
+      body = JSON.parse(response.body)
+      expect(body.dig("error", "code")).to eq("unavailable")
+    end
+  end
 end
