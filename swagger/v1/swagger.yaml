@@ -4,6 +4,118 @@ info:
   title: Social Media API
   version: v1
 paths:
+  "/api/v1/posts":
+    get:
+      summary: Lists kept posts
+      tags:
+      - Posts
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: omits soft-deleted posts
+        '401':
+          description: unauthenticated
+    post:
+      summary: Creates a post
+      tags:
+      - Posts
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '201':
+          description: created
+        '422':
+          description: title too long
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                post:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    body:
+                      type: string
+                  required:
+                  - title
+                  - body
+              required:
+              - post
+  "/api/v1/posts/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: Authorization
+      in: header
+      schema:
+        type: string
+    get:
+      summary: Shows a kept post
+      tags:
+      - Posts
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: found
+        '404':
+          description: soft-deleted
+    patch:
+      summary: Updates own post
+      tags:
+      - Posts
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: updated
+        '404':
+          description: another user's post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                post:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    body:
+                      type: string
+    delete:
+      summary: Soft-deletes own post
+      tags:
+      - Posts
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: deleted
   "/api/v1/sessions":
     post:
       summary: Creates a session
@@ -65,6 +177,12 @@ paths:
                   - password
               required:
               - user
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 servers:
 - url: http://{defaultHost}
   variables:

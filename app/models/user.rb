@@ -2,6 +2,7 @@
 
 class User < ApplicationRecord
   has_secure_password
+  has_many :posts, dependent: :destroy
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
   # Username uniqueness is case-sensitive on purpose. Kirby and kirby can both exist.

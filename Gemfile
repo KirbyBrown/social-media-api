@@ -5,6 +5,7 @@ gem "pg", "~> 1.5"
 gem "puma", ">= 6.0"
 gem "bcrypt", "~> 3.1.7"
 gem "jwt"
+gem "pagy"
 gem "bootsnap", require: false
 gem "ostruct"
 gem "rswag-api"

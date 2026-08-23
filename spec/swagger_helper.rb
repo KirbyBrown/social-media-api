@@ -13,6 +13,15 @@ RSpec.configure do |config|
         version: "v1"
       },
       paths: {},
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: :http,
+            scheme: :bearer,
+            bearerFormat: "JWT"
+          }
+        }
+      },
       servers: [
         {
           url: "http://{defaultHost}",
