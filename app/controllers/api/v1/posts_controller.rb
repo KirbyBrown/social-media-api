@@ -8,7 +8,7 @@ module Api
       before_action :authenticate_user!
 
       def index
-        pagy, posts = pagy(:offset, Post.kept.includes(:user).order(created_at: :desc))
+        pagy, posts = pagy(:offset, posts_scope)
         render json: { posts: posts.map(&:as_api_json), pagination: pagination_payload(pagy) }
       end
 
@@ -47,12 +47,25 @@ module Api
 
       private
 
+      def posts_scope
+        relation = Post.kept.includes(:user).order(created_at: :desc)
+        relation = relation.with_metadata(metadata_filter) if metadata_filter
+        relation
+      end
+
+      def metadata_filter
+        raw = params[:metadata]
+        return unless raw.is_a?(ActionController::Parameters)
+
+        raw.permit!.to_h.presence
+      end
+
       def post_params
-        params.require(:post).permit(:title, :body)
+        params.require(:post).permit(:title, :body, metadata: {})
       end
 
       def post_update_params
-        params.require(:post).permit(:title, :body, :lock_version).tap do |permitted|
+        params.require(:post).permit(:title, :body, :lock_version, metadata: {}).tap do |permitted|
           permitted.require(:lock_version)
         end
       end

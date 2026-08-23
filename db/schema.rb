@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_23_105700) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_112200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,14 +20,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_105700) do
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.integer "lock_version", default: 0, null: false
+    t.jsonb "metadata", default: {}, null: false
     t.integer "ratings_count", default: 0, null: false
     t.integer "ratings_sum", default: 0, null: false
     t.string "title", limit: 100, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.integer "views_count", default: 0, null: false
+    t.index ["average_rating", "created_at"], name: "index_posts_kept_on_average_rating_created_at", order: { created_at: :desc }, where: "(deleted_at IS NULL)"
     t.index ["created_at"], name: "index_posts_on_created_at", order: :desc, where: "(deleted_at IS NULL)"
     t.index ["deleted_at"], name: "index_posts_on_deleted_at"
+    t.index ["metadata"], name: "index_posts_on_metadata", opclass: :jsonb_path_ops, using: :gin
     t.index ["user_id"], name: "index_posts_on_user_id"
   end
 

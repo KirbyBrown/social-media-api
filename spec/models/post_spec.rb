@@ -19,6 +19,31 @@ RSpec.describe Post do
     expect(index.orders).to eq(:desc)
   end
 
+  it "indexes kept posts by average_rating and created_at for min_rating" do
+    index = ActiveRecord::Base.connection.indexes(:posts).find { |entry|
+      entry.columns == %w[average_rating created_at]
+    }
+
+    expect(index.where).to eq("(deleted_at IS NULL)")
+    expect(index.orders).to eq("created_at" => :desc)
+  end
+
+  it "indexes metadata with GIN jsonb_path_ops" do
+    index = ActiveRecord::Base.connection.indexes(:posts).find { |entry| entry.columns == [ "metadata" ] }
+
+    expect(index.using).to eq(:gin)
+    expect(index.opclasses).to eq(:jsonb_path_ops)
+  end
+
+  describe ".with_metadata" do
+    it "filters with jsonb containment" do
+      match = create(:post, metadata: { "source" => "obd", "vin" => "1" })
+      create(:post, metadata: { "source" => "manual" })
+
+      expect(described_class.with_metadata("source" => "obd")).to contain_exactly(match)
+    end
+  end
+
   describe ".kept" do
     it "excludes soft-deleted posts" do
       kept = create(:post)

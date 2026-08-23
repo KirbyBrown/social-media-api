@@ -21,6 +21,8 @@ paths:
       - Posts
       security:
       - bearerAuth: []
+      description: metadata query values are strings. ?metadata[count]=2 will not
+        match a JSON number.
       parameters:
       - name: Authorization
         in: header
@@ -31,9 +33,14 @@ paths:
         required: false
         schema:
           type: integer
+      - name: metadata[source]
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         '200':
-          description: omits soft-deleted posts
+          description: filters by metadata containment
         '401':
           description: unauthenticated
     post:
@@ -65,6 +72,8 @@ paths:
                       type: string
                     body:
                       type: string
+                    metadata:
+                      type: object
                   required:
                   - title
                   - body

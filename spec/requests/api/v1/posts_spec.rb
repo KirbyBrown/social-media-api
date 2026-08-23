@@ -11,8 +11,10 @@ RSpec.describe "Posts" do
       tags "Posts"
       produces "application/json"
       security [ { bearerAuth: [] } ]
+      description "metadata query values are strings. ?metadata[count]=2 will not match a JSON number."
       parameter name: :Authorization, in: :header, type: :string
       parameter name: :page, in: :query, type: :integer, required: false
+      parameter name: :"metadata[source]", in: :query, type: :string, required: false
 
       response "200", "paginated list" do
         before { create_list(:post, 2, user:) }
@@ -40,6 +42,21 @@ RSpec.describe "Posts" do
         end
       end
 
+      response "200", "filters by metadata containment" do
+        before do
+          create(:post, user:, title: "Scan", metadata: { "source" => "obd" })
+          create(:post, user:, title: "Note", metadata: { "source" => "manual" })
+        end
+
+        let(:page) { 1 }
+        let(:"metadata[source]") { "obd" }
+
+        run_test! do |response|
+          titles = JSON.parse(response.body)["posts"].map { |post| post["title"] }
+          expect(titles).to eq([ "Scan" ])
+        end
+      end
+
       response "401", "unauthenticated" do
         let(:Authorization) { nil }
         let(:page) { 1 }
@@ -63,7 +80,8 @@ RSpec.describe "Posts" do
             type: :object,
             properties: {
               title: { type: :string },
-              body: { type: :string }
+              body: { type: :string },
+              metadata: { type: :object }
             },
             required: %w[title body]
           }
@@ -72,12 +90,13 @@ RSpec.describe "Posts" do
       }
 
       response "201", "created" do
-        let(:params) { { post: { title: "Hello", body: "World" } } }
+        let(:params) { { post: { title: "Hello", body: "World", metadata: { source: "obd" } } } }
 
         run_test! do |response|
           body = JSON.parse(response.body)
           expect(body.dig("post", "title")).to eq("Hello")
           expect(body.dig("post", "user", "id")).to eq(user.id)
+          expect(body.dig("post", "metadata")).to eq("source" => "obd")
         end
       end
 
