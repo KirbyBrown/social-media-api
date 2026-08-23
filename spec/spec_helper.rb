@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require "simplecov"
-SimpleCov.start "rails"
+# rswag's swaggerize task runs rspec with --dry-run: no code executes, so the
+# coverage report would be a meaningless near-zero number. See SOLUTION.md.
+SimpleCov.start "rails" unless ARGV.include?("--dry-run")
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|

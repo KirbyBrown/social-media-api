@@ -38,6 +38,3 @@
 /coverage
 /spec/examples.txt
 
-# SOLUTION.md (we want to add this back in at the end, but don't want to have to think about draft status on each commit).
-SOLUTION.md
-

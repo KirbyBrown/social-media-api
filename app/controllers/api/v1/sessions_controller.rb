@@ -7,7 +7,7 @@ module Api
         user = find_user
         # Unknown emails skip bcrypt and return faster than known ones. A dummy
         # User.new.authenticate(params[:password]) on the nil path would close
-        # that timing gap; we left it as a known tradeoff. See SOLUTION.md.
+        # that timing gap; left as a known tradeoff. See SOLUTION.md.
         if user&.authenticate(params[:password])
           render json: { user: user.as_public_json, token: Auth::Token.encode(user) }, status: :ok
         else
