@@ -4,6 +4,16 @@ info:
   title: Social Media API
   version: v1
 paths:
+  "/api/v1/health":
+    get:
+      summary: Reports Postgres, Redis, and Sidekiq
+      tags:
+      - Health
+      responses:
+        '200':
+          description: redis down is still 200
+        '503':
+          description: postgres is down
   "/api/v1/posts":
     get:
       summary: Lists kept posts

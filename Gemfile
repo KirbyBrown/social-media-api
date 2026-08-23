@@ -6,6 +6,8 @@ gem "puma", ">= 6.0"
 gem "bcrypt", "~> 3.1.7"
 gem "jwt"
 gem "pagy"
+gem "redis"
+gem "sidekiq"
 gem "bootsnap", require: false
 gem "ostruct"
 gem "rswag-api"
