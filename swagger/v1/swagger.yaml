@@ -1,0 +1,72 @@
+---
+openapi: 3.0.1
+info:
+  title: Social Media API
+  version: v1
+paths:
+  "/api/v1/sessions":
+    post:
+      summary: Creates a session
+      tags:
+      - Sessions
+      parameters: []
+      responses:
+        '200':
+          description: authenticated with username
+        '401':
+          description: invalid credentials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: kirby@example.com
+                username:
+                  type: string
+                  example: kirby
+                password:
+                  type: string
+                  example: password123
+  "/api/v1/users":
+    post:
+      summary: Registers a user
+      tags:
+      - Users
+      parameters: []
+      responses:
+        '201':
+          description: created
+        '422':
+          description: duplicate username or email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                      example: kirby
+                    email:
+                      type: string
+                      example: kirby@example.com
+                    password:
+                      type: string
+                      example: password123
+                  required:
+                  - username
+                  - email
+                  - password
+              required:
+              - user
+servers:
+- url: http://{defaultHost}
+  variables:
+    defaultHost:
+      default: localhost:3000

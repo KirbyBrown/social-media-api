@@ -17,4 +17,8 @@ bin/rails s
 bundle exec rspec
 ```
 
-Swagger UI is at `/api-docs` once the OpenAPI file has been generated.
+Swagger UI is at `/api-docs`. `swagger/v1/swagger.yaml` is committed so a fresh clone can serve docs without an extra step. After request specs change, regenerate it:
+
+```bash
+bundle exec rake rswag:specs:swaggerize
+```
