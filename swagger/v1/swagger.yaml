@@ -188,6 +188,35 @@ paths:
                 password:
                   type: string
                   example: password123
+  "/api/v1/timeline":
+    get:
+      summary: Lists the newest kept posts
+      tags:
+      - Timeline
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: min_rating
+        in: query
+        required: false
+        schema:
+          type: number
+      responses:
+        '200':
+          description: omits soft-deleted posts
+        '400':
+          description: min_rating out of range
+        '401':
+          description: unauthenticated
   "/api/v1/users":
     post:
       summary: Registers a user

@@ -22,6 +22,7 @@ module Api
       def create
         post = current_user.posts.new(post_params)
         if post.save
+          Timeline::Feed.invalidate
           render json: { post: post.as_api_json }, status: :created
         else
           render_validation_error(post)
@@ -31,6 +32,7 @@ module Api
       def update
         post = current_user.posts.kept.find(params[:id])
         if post.update(post_params)
+          Timeline::Feed.invalidate
           render json: { post: post.as_api_json }
         else
           render_validation_error(post)
@@ -40,6 +42,7 @@ module Api
       def destroy
         post = current_user.posts.kept.find(params[:id])
         post.soft_delete
+        Timeline::Feed.invalidate
         head :no_content
       end
 

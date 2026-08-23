@@ -19,6 +19,7 @@ module Ratings
 
     def persist
       rating = nil
+      wrote = false
 
       Rating.transaction do
         # Row lock serializes same-user writers. Redis lock is later, for contention, not correctness. See SOLUTION.md.
@@ -33,8 +34,10 @@ module Ratings
           delta: inserting ? rating.value : rating.value - old_value,
           count_delta: inserting ? 1 : 0
         )
+        wrote = true
       end
 
+      Timeline::Feed.invalidate if wrote
       rating
     end
 

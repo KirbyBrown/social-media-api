@@ -12,6 +12,13 @@ RSpec.describe Post do
   it { is_expected.to validate_length_of(:title).is_at_most(100) }
   it { is_expected.to validate_length_of(:body).is_at_most(1000) }
 
+  it "indexes kept posts by created_at desc for the timeline" do
+    index = ActiveRecord::Base.connection.indexes(:posts).find { |entry| entry.columns == [ "created_at" ] }
+
+    expect(index.where).to eq("(deleted_at IS NULL)")
+    expect(index.orders).to eq(:desc)
+  end
+
   describe ".kept" do
     it "excludes soft-deleted posts" do
       kept = create(:post)
