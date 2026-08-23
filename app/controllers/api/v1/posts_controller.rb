@@ -14,9 +14,8 @@ module Api
 
       def show
         post = Post.kept.find(params[:id])
-        # increment_counter skips lock_version and callbacks. See SOLUTION.md.
-        Post.increment_counter(:views_count, post.id)
-        render json: { post: post.reload.as_api_json }
+        enqueue_view_increment(post.id)
+        render json: { post: post.as_api_json }
       end
 
       def create
@@ -31,7 +30,7 @@ module Api
 
       def update
         post = current_user.posts.kept.find(params[:id])
-        if post.update(post_params)
+        if post.update(post_update_params)
           Timeline::Feed.invalidate
           render json: { post: post.as_api_json }
         else
@@ -50,6 +49,18 @@ module Api
 
       def post_params
         params.require(:post).permit(:title, :body)
+      end
+
+      def post_update_params
+        params.require(:post).permit(:title, :body, :lock_version).tap do |permitted|
+          permitted.require(:lock_version)
+        end
+      end
+
+      def enqueue_view_increment(post_id)
+        Posts::IncrementViewsJob.perform_later(post_id)
+      rescue Redis::BaseError, RedisClient::Error
+        Post.where(id: post_id).update_all("views_count = views_count + 1")
       end
 
       def pagination_payload(pagy)

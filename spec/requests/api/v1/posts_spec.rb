@@ -99,15 +99,18 @@ RSpec.describe "Posts" do
       tags "Posts"
       produces "application/json"
       security [ { bearerAuth: [] } ]
+      description "views_count is eventually consistent. The increment runs in Sidekiq after the response."
 
-      response "200", "found" do
+      response "200", "found; views_count is eventually consistent" do
         let(:record) { create(:post, user:, views_count: 0) }
         let(:id) { record.id }
 
         run_test! do |response|
           body = JSON.parse(response.body)
           expect(body.dig("post", "id")).to eq(record.id)
-          expect(body.dig("post", "views_count")).to eq(1)
+          expect(body.dig("post", "views_count")).to eq(0)
+          expect(body.dig("post", "lock_version")).to eq(0)
+          expect(Posts::IncrementViewsJob).to have_been_enqueued.with(record.id)
         end
       end
 
@@ -133,7 +136,8 @@ RSpec.describe "Posts" do
             type: :object,
             properties: {
               title: { type: :string },
-              body: { type: :string }
+              body: { type: :string },
+              lock_version: { type: :integer }
             }
           }
         }
@@ -142,17 +146,39 @@ RSpec.describe "Posts" do
       response "200", "updated" do
         let(:record) { create(:post, user:, title: "Old") }
         let(:id) { record.id }
-        let(:params) { { post: { title: "New" } } }
+        let(:params) { { post: { title: "New", lock_version: 0 } } }
 
         run_test! do |response|
           expect(JSON.parse(response.body).dig("post", "title")).to eq("New")
         end
       end
 
+      response "409", "stale lock_version" do
+        let(:record) { create(:post, user:, title: "Old") }
+        let(:id) { record.id }
+        let(:params) { { post: { title: "New", lock_version: 0 } } }
+
+        before { record.update!(title: "Mid") }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body).dig("error", "code")).to eq("conflict")
+        end
+      end
+
+      response "400", "missing lock_version" do
+        let(:record) { create(:post, user:, title: "Old") }
+        let(:id) { record.id }
+        let(:params) { { post: { title: "New" } } }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body).dig("error", "code")).to eq("bad_request")
+        end
+      end
+
       response "404", "another user's post" do
         let(:record) { create(:post, title: "Not yours") }
         let(:id) { record.id }
-        let(:params) { { post: { title: "Hijack" } } }
+        let(:params) { { post: { title: "Hijack", lock_version: 0 } } }
 
         run_test! do |response|
           expect(JSON.parse(response.body).dig("error", "code")).to eq("not_found")

@@ -98,4 +98,8 @@ RSpec.describe Ratings::Upsert do
     expect(post.ratings_sum).to eq(5)
     expect(post.average_rating).to eq(5)
   end
+
+  it "enqueues a notification after a successful write" do
+    expect { upsert(rater, 4) }.to have_enqueued_job(Ratings::NotifyJob)
+  end
 end

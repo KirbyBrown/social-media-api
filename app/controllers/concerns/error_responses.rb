@@ -17,6 +17,15 @@ module ErrorResponses
       )
     end
 
+    rescue_from ActiveRecord::StaleObjectError do
+      render_error(
+        code: "conflict",
+        message: "Post was updated by someone else",
+        status: :conflict,
+        details: { lock_version: [ "is stale" ] }
+      )
+    end
+
     rescue_from ActiveRecord::RecordNotUnique do |error|
       render_error(
         code: "validation_failed",

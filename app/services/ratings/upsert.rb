@@ -9,20 +9,24 @@ module Ratings
     end
 
     def call
+      Locks::RedisLock.new("ratings:post:#{@post.id}").around { write }
+    end
+
+    private
+
+    def write
       persist
     rescue ActiveRecord::RecordNotUnique
       # First-insert races lose the unique index; retry once as an update. See SOLUTION.md.
       persist
     end
 
-    private
-
     def persist
       rating = nil
       wrote = false
 
       Rating.transaction do
-        # Row lock serializes same-user writers. Redis lock is later, for contention, not correctness. See SOLUTION.md.
+        # Row lock serializes same-user writers. Redis lock is contention relief, not correctness. See SOLUTION.md.
         rating = @user.ratings.lock.find_or_initialize_by(post: @post)
         old_value = rating.value
         inserting = rating.new_record?
@@ -37,11 +41,14 @@ module Ratings
         wrote = true
       end
 
-      Timeline::Feed.invalidate if wrote
+      if wrote
+        Timeline::Feed.invalidate
+        Ratings::NotifyJob.perform_later(rating.id)
+      end
       rating
     end
 
-    # SQL increment so we do not bump lock_version or run callbacks. See SOLUTION.md.
+    # update_all skips lock_version and callbacks. increment_counter would not. See SOLUTION.md.
     def apply_delta(delta:, count_delta:)
       return if delta.zero? && count_delta.zero?
 

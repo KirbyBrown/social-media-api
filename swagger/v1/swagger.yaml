@@ -87,9 +87,11 @@ paths:
       - Posts
       security:
       - bearerAuth: []
+      description: views_count is eventually consistent. The increment runs in Sidekiq
+        after the response.
       responses:
         '200':
-          description: found
+          description: found; views_count is eventually consistent
         '404':
           description: soft-deleted
     patch:
@@ -102,6 +104,10 @@ paths:
       responses:
         '200':
           description: updated
+        '409':
+          description: stale lock_version
+        '400':
+          description: missing lock_version
         '404':
           description: another user's post
       requestBody:
@@ -117,6 +123,8 @@ paths:
                       type: string
                     body:
                       type: string
+                    lock_version:
+                      type: integer
     delete:
       summary: Soft-deletes own post
       tags:

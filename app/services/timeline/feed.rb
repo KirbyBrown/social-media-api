@@ -18,10 +18,16 @@ module Timeline
       else
         load_page
       end
+    rescue Redis::BaseError, RedisClient::Error
+      load_page
     end
 
     def self.invalidate
       Rails.cache.increment(VERSION_KEY)
+      # Every write enqueues a warm. At scale, unique-until-executing or a debounce. See SOLUTION.md.
+      Timeline::WarmJob.perform_later
+    rescue Redis::BaseError, RedisClient::Error
+      nil
     end
 
     private

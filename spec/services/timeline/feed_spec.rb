@@ -61,6 +61,13 @@ RSpec.describe Timeline::Feed do
     expect(Post).to have_received(:kept).exactly(3).times
   end
 
+  it "loads the page when the cache backend is down" do
+    create(:post, title: "Live")
+    allow(Rails.cache).to receive(:fetch).and_raise(Redis::CannotConnectError, "Connection refused")
+
+    expect(titles).to eq([ "Live" ])
+  end
+
   it "serves a new first page after invalidate" do
     create(:post, title: "Before")
     expect(titles).to eq([ "Before" ])

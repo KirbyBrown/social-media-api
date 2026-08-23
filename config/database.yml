@@ -15,8 +15,7 @@
 default: &default
   adapter: postgresql
   encoding: unicode
-  # For details on connection pooling, see Rails configuration guide
-  # https://guides.rubyonrails.org/configuring.html#database-pooling
+  # Size pool to Puma threads plus Sidekiq concurrency. PgBouncer in transaction mode at real load. See SOLUTION.md.
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 
